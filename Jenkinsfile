@@ -20,39 +20,46 @@ node {
       }
     }
     stage ('Check Image with Trend Micro') {
-      smartcheckScan([
-        imageName: "${K8S_REGISTRY}/${REPOSITORY}:latest",
-        smartcheckHost: "${DSSC_SERVICE}",
-        smartcheckCredentialsId: "smartcheck-auth",
-        insecureSkipTLSVerify: true,
-        insecureSkipRegistryTLSVerify: true,
-        imagePullAuth: new groovy.json.JsonBuilder([
-          aws: [
-            region: "eu-west-1",
-            accessKeyID: "****",
-            secretAccessKey: "****",
-            ]
-        ]).toString(),
-        findingsThreshold: new groovy.json.JsonBuilder([
-          malware: 0,
-          vulnerabilities: [
-            defcon1: 0,
-            critical: 0,
-            high: 100,
-          ],
-          contents: [
-            defcon1: 0,
-            critical: 0,
-            high: 0,
-          ],
-          checklists: [
-            defcon1: 0,
-            critical: 0,
-            high: 0,
-          ],
-        ]).toString(),
-      ])
-   }
+      withCredentials([
+        usernamePassword([
+          credentialsId: "example-registry-auth",
+          usernameVariable: "REGISTRY_USER",
+          passwordVariable: "REGISTRY_PASSWORD",
+        ])
+      ]){
+        smartcheckScan([
+          imageName: "${K8S_REGISTRY}/${REPOSITORY}:latest",
+          smartcheckHost: "${DSSC_SERVICE}",
+          smartcheckCredentialsId: "smartcheck-auth",
+          insecureSkipTLSVerify: true,
+          insecureSkipRegistryTLSVerify: true,
+          imagePullAuth: new groovy.json.JsonBuilder([
+            aws: [
+              region: "eu-west-1",
+              accessKeyID: REGISTRY_USER,
+              secretAccessKey: REGISTRY_PASSWORD,
+              ]
+          ]).toString(),
+          findingsThreshold: new groovy.json.JsonBuilder([
+            malware: 0,
+            vulnerabilities: [
+              defcon1: 0,
+              critical: 0,
+              high: 100,
+            ],
+            contents: [
+              defcon1: 0,
+              critical: 0,
+              high: 0,
+            ],
+            checklists: [
+              defcon1: 0,
+              critical: 0,
+              high: 0,
+            ],
+          ]).toString(),
+        ])
+     }
     stage('Deploy App to Kubernetes') {
       script {
         kubernetesDeploy(configs: "app.yml",
