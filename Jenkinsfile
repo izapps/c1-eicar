@@ -22,7 +22,7 @@ node {
     stage ('Check Image with Trend Micro') {
       withCredentials([
         usernamePassword([
-          credentialsId: "example-registry-auth",
+          credentialsId: "aws-ecr",
           usernameVariable: "REGISTRY_USER",
           passwordVariable: "REGISTRY_PASSWORD",
         ])
